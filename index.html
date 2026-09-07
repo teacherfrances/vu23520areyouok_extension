@@ -1,0 +1,1622 @@
+<!DOCTYPE html>
+<html lang="en-AU">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Are You OK? Speak and Record</title>
+<style>
+:root{
+  --navy:#0b2e4f; --navy2:#12293f; --teal:#0f7d7d; --tealdk:#0b5f5f; --tealtint:#e4f2f2;
+  --orange:#c97a1a; --orangetint:#fdf3e0; --orangelt:#f2c98a;
+  --green:#1c7a3e; --greentint:#e7f4ec; --red:#b3261e; --redtint:#fbeceb;
+  --cream:#f6f2ea; --card:#fff; --line:#e3ddd0; --grey:#5a6772; --focus:#1a73b8;
+  --panel:#f5f7f9; --fs:24px;
+  --disp:"Segoe UI Black","Arial Black","Segoe UI",Carlito,Calibri,system-ui,sans-serif;
+  --body:Calibri,Carlito,"Segoe UI",Candara,"Helvetica Neue",Arial,sans-serif;
+  --num:Consolas,"Lucida Console","DejaVu Sans Mono","Courier New",monospace;
+}
+body.t30{--fs:30px}
+body.t36{--fs:36px}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;padding:0}
+body{
+  font-family:var(--body); font-size:var(--fs); line-height:1.45;
+  color:var(--navy); background:var(--cream);
+  padding-top:calc(var(--fs)*3.1); padding-bottom:calc(var(--fs)*3.6);
+}
+button{font-family:var(--body);font-size:1em;color:inherit;cursor:pointer}
+
+/* ---------- top bar ---------- */
+#bar{
+  position:fixed;top:0;left:0;right:0;z-index:40;background:var(--navy);color:#fff;
+  min-height:calc(var(--fs)*3.1);display:flex;align-items:center;gap:.35em;
+  padding:.3em .5em;padding-top:calc(.3em + env(safe-area-inset-top));
+}
+#bar .bt{
+  background:#153f66;border:2px solid #2b5c86;color:#fff;border-radius:.5em;
+  padding:.3em .6em;font-size:.72em;font-weight:700;min-height:calc(var(--fs)*1.9);
+}
+#bar .bt:active{background:#0a2337}
+#bar .ttl{
+  flex:1;min-width:0;font-family:var(--disp);font-weight:900;color:var(--orangelt);
+  font-size:.8em;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding:0 .2em;
+}
+#bar .pill{
+  background:#fff;color:var(--navy);border-radius:1em;padding:.18em .6em;
+  font-family:var(--num);font-size:.68em;font-weight:700;white-space:nowrap;
+}
+
+/* ---------- bottom bar ---------- */
+#nav{
+  position:fixed;bottom:0;left:0;right:0;z-index:40;background:#fff;
+  border-top:3px solid var(--line);padding:.35em .5em;
+  padding-bottom:calc(.35em + env(safe-area-inset-bottom));
+}
+#nav .tip{font-size:.66em;color:var(--grey);margin:0 0 .25em;min-height:1.1em}
+#nav .row{display:flex;gap:.5em}
+#nav button{
+  flex:1;min-height:calc(var(--fs)*2.6);border-radius:.6em;border:3px solid var(--navy);
+  background:#fff;color:var(--navy);font-weight:700;font-size:.8em;
+}
+#nav button.go{background:var(--navy);color:#fff}
+#nav button.wait{background:var(--orangetint);border-color:var(--orange);color:#7a4a06}
+#nav button.done{background:var(--green);border-color:var(--green);color:#fff}
+#nav button[disabled]{opacity:.4}
+
+/* ---------- layout ---------- */
+.wrap{max-width:900px;margin:0 auto;padding:.8em .7em 1.2em}
+h1{font-family:var(--disp);font-weight:900;font-size:1.35em;line-height:1.15;margin:.1em 0 .3em}
+h2{font-family:var(--disp);font-weight:900;font-size:1.05em;margin:1.1em 0 .4em}
+p{margin:.4em 0}
+.eyebrow{
+  font-size:.62em;font-weight:700;letter-spacing:.09em;text-transform:uppercase;
+  color:var(--tealdk);margin:0 0 .2em
+}
+.sub{font-size:.78em;color:var(--grey);margin:.2em 0 .6em}
+.grouphead{
+  font-size:.66em;font-weight:700;letter-spacing:.08em;text-transform:uppercase;
+  color:var(--tealdk);margin:1em 0 .4em;padding-bottom:.2em;border-bottom:3px solid var(--tealtint)
+}
+
+/* ---------- menu cards ---------- */
+.mcard{
+  display:block;width:100%;text-align:left;background:var(--card);border:3px solid var(--line);
+  border-left:10px solid var(--teal);border-radius:.7em;padding:.6em .7em;margin:0 0 .55em;
+  min-height:calc(var(--fs)*2.8)
+}
+.mcard.mic{border-left-color:var(--orange)}
+.mcard:active{background:var(--tealtint)}
+.mcard .step{display:block;font-size:.6em;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--tealdk)}
+.mcard .name{display:block;font-family:var(--disp);font-weight:900;font-size:.92em;margin:.1em 0}
+.mcard .desc{display:block;font-size:.72em;color:var(--grey);line-height:1.35}
+.mcard .score{
+  display:inline-block;margin-top:.35em;font-family:var(--num);font-size:.66em;font-weight:700;
+  background:var(--panel);border:2px solid var(--line);border-radius:1em;padding:.15em .6em
+}
+.mcard .score.part{background:var(--orangetint);border-color:var(--orange);color:#7a4a06}
+.mcard .score.full{background:var(--greentint);border-color:var(--green);color:var(--green)}
+
+/* ---------- panels ---------- */
+.panel{background:var(--card);border:3px solid var(--line);border-radius:.7em;padding:.7em .8em;margin:.6em 0}
+.panel h3{font-family:var(--disp);font-weight:900;font-size:.9em;margin:0 0 .3em}
+.panel p,.panel li{font-size:.78em}
+.panel ul{margin:.3em 0;padding-left:1.1em}
+.callout{background:var(--orangetint);border:3px solid var(--orange);border-radius:.7em;padding:.6em .75em;margin:.6em 0}
+.callout .lead{font-weight:700;color:#7a4a06;display:block;margin-bottom:.15em;font-size:.82em}
+.callout p{font-size:.76em;margin:.2em 0}
+.tealbox{background:var(--tealtint);border:3px solid var(--teal);border-radius:.7em;padding:.6em .75em;margin:.6em 0}
+.tealbox p{font-size:.78em}
+
+/* ---------- part header ---------- */
+.rhead{background:var(--navy);color:#fff;border-radius:.7em;padding:.7em .8em;margin:.2em 0 .7em}
+.rhead .k{display:block;font-size:.62em;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--orangelt)}
+.rhead h1{color:#fff;font-size:1.1em;margin:.1em 0 .2em}
+.rhead .d{font-size:.74em;color:#d5e4f0;line-height:1.35}
+.rhead .live{
+  display:inline-block;margin-top:.45em;background:#fff;color:var(--navy);border-radius:1em;
+  padding:.2em .7em;font-family:var(--num);font-size:.66em;font-weight:700
+}
+.pbar{display:block;height:.5em;background:#153f66;border-radius:1em;margin-top:.5em;overflow:hidden}
+.pbar i{display:block;height:100%;background:var(--orangelt);width:0}
+
+/* ---------- item cards ---------- */
+.card{background:var(--card);border:3px solid var(--line);border-left:10px solid var(--line);border-radius:.7em;padding:.65em .75em;margin:0 0 .7em}
+.card.ok{border-left-color:var(--green)}
+.card.no{border-left-color:var(--red)}
+.card.flash{animation:fl .9s ease-in-out 2}
+@keyframes fl{0%,100%{background:#fff}50%{background:var(--orangetint)}}
+.chead{display:flex;align-items:center;gap:.4em;margin-bottom:.35em}
+.num{background:var(--navy);color:#fff;font-family:var(--num);font-weight:700;font-size:.62em;border-radius:.4em;padding:.15em .5em}
+.tag{font-size:.6em;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--orange)}
+.q{font-size:.88em;font-weight:700;margin:.15em 0 .5em;line-height:1.35}
+.qs{font-size:.78em;color:var(--grey);margin:-.25em 0 .5em;line-height:1.35}
+.opt{
+  display:block;width:100%;text-align:left;background:var(--panel);border:3px solid var(--line);
+  border-radius:.6em;padding:.5em .7em;margin:0 0 .45em;min-height:calc(var(--fs)*2.6);font-size:.82em;line-height:1.3
+}
+.opt:active{background:var(--tealtint)}
+.opt.pick{border-color:var(--navy);background:var(--tealtint)}
+.opt.right{border-color:var(--green);background:var(--greentint);font-weight:700}
+.opt.wrong{border-color:var(--red);background:var(--redtint)}
+.opt[disabled]{opacity:.85}
+.chip{
+  display:inline-block;background:#fff;border:3px solid var(--teal);border-radius:1.4em;
+  padding:.35em .8em;margin:0 .4em .45em 0;font-size:.78em;min-height:calc(var(--fs)*1.9);font-weight:700
+}
+.chip.used{opacity:.35;border-color:var(--line);color:var(--grey)}
+.chip.right{border-color:var(--green);background:var(--greentint)}
+.chip.wrong{border-color:var(--red);background:var(--redtint)}
+.built{background:var(--panel);border:3px dashed var(--line);border-radius:.6em;padding:.5em .6em;margin:0 0 .5em;font-size:.8em;min-height:calc(var(--fs)*2.2)}
+.built .bi{display:block;padding:.15em 0;border-bottom:1px solid var(--line)}
+.built .bi:last-child{border-bottom:0}
+.fb{border-radius:.6em;padding:.5em .7em;margin:.35em 0 0;font-size:.78em;line-height:1.35}
+.fb .lead{display:block;font-weight:700;margin-bottom:.1em}
+.fb.good{background:var(--greentint);border:3px solid var(--green);color:#0e4c26}
+.fb.bad{background:var(--redtint);border:3px solid var(--red);color:#7c1a15}
+.fb.info{background:var(--tealtint);border:3px solid var(--teal);color:var(--tealdk)}
+.mini{
+  background:#fff;border:3px solid var(--navy);border-radius:.5em;padding:.3em .7em;
+  font-size:.7em;font-weight:700;margin:.4em .4em 0 0;min-height:calc(var(--fs)*1.9)
+}
+.mini.amb{border-color:var(--orange);color:#7a4a06;background:var(--orangetint)}
+.big{
+  display:block;width:100%;background:var(--teal);color:#fff;border:3px solid var(--tealdk);
+  border-radius:.6em;padding:.55em;font-size:.85em;font-weight:700;margin:.5em 0;
+  min-height:calc(var(--fs)*2.6)
+}
+.big.amb{background:var(--orange);border-color:#9a5c0d}
+.big.red{background:var(--red);border-color:#7c1a15}
+.big.gy{background:#fff;color:var(--navy);border-color:var(--navy)}
+.big[disabled]{opacity:.45}
+
+/* ---------- audio ---------- */
+.audio{background:var(--navy);color:#fff;border-radius:.7em;padding:.7em .8em;margin:.2em 0 .8em}
+.audio .cap{display:block;font-size:.68em;color:var(--orangelt);font-weight:700;letter-spacing:.06em;text-transform:uppercase}
+.audio .nm{font-family:var(--disp);font-weight:900;font-size:.95em;margin:.15em 0 .4em}
+.audio .rw{display:flex;gap:.45em;flex-wrap:wrap}
+.audio button{
+  flex:1;min-width:6em;background:#fff;color:var(--navy);border:3px solid #fff;border-radius:.6em;
+  padding:.4em;font-weight:700;font-size:.76em;min-height:calc(var(--fs)*2.3)
+}
+.audio button.off{background:#153f66;color:#fff;border-color:#2b5c86}
+.audio .note{font-size:.66em;color:#d5e4f0;margin-top:.4em;line-height:1.35}
+.meter{height:.7em;background:#153f66;border-radius:1em;overflow:hidden;margin-top:.5em}
+.meter i{display:block;height:100%;width:0;background:var(--orangelt)}
+.rec{background:#fff;border:3px solid var(--orange);border-radius:.7em;padding:.7em .8em;margin:.6em 0}
+.rec .st{font-family:var(--num);font-size:.72em;font-weight:700;color:#7a4a06}
+.rec .dot{display:inline-block;width:.6em;height:.6em;border-radius:50%;background:var(--red);margin-right:.35em;animation:bl 1s infinite}
+@keyframes bl{0%,100%{opacity:1}50%{opacity:.2}}
+.tick{list-style:none;padding:0;margin:.3em 0}
+.tick li{font-size:.78em;padding:.2em 0 .2em 1.4em;position:relative;line-height:1.35}
+.tick li:before{content:"\2713";position:absolute;left:0;color:var(--teal);font-weight:700}
+
+/* ---------- tap keyboard ---------- */
+.kb{display:flex;flex-wrap:wrap;gap:.3em;margin:.5em 0}
+.kb button{
+  flex:1 0 calc(20% - .3em);min-height:calc(var(--fs)*2.2);border:3px solid var(--line);
+  background:#fff;border-radius:.5em;font-weight:700;font-size:.78em
+}
+.kb button.wide{flex:1 0 calc(40% - .3em)}
+.kb button:active{background:var(--tealtint)}
+.kbout{
+  font-family:var(--num);font-size:.9em;font-weight:700;background:var(--panel);
+  border:3px solid var(--line);border-radius:.5em;padding:.45em .6em;min-height:calc(var(--fs)*1.9);
+  word-break:break-all
+}
+
+/* ---------- tables and results ---------- */
+.tscroll{overflow-x:auto;-webkit-overflow-scrolling:touch}
+table.gt{border-collapse:collapse;width:100%;font-size:.72em;margin:.4em 0}
+table.gt th{background:var(--navy);color:#fff;text-align:left;padding:.35em .5em;font-weight:700}
+table.gt td{border:1px solid var(--line);padding:.35em .5em;vertical-align:top}
+table.gt tr:nth-child(even) td{background:var(--panel)}
+.bigscore{font-family:var(--disp);font-weight:900;font-size:2.4em;color:var(--teal);text-align:center;margin:.2em 0 0}
+.bandtxt{text-align:center;font-size:.85em;margin:.1em 0 .6em}
+.codebox{
+  font-family:var(--num);font-weight:700;font-size:1.05em;letter-spacing:.12em;text-align:center;
+  background:var(--navy);color:#fff;border-radius:.6em;padding:.55em .3em;margin:.5em 0;word-break:break-all
+}
+.jump{
+  position:fixed;left:50%;transform:translateX(-50%);bottom:calc(var(--fs)*4.1);z-index:45;
+  background:var(--orange);color:#fff;border:3px solid #9a5c0d;border-radius:1.6em;
+  padding:.45em 1em;font-weight:700;font-size:.76em;box-shadow:0 4px 14px rgba(0,0,0,.25);display:none
+}
+.jump.on{display:block}
+.hidden{display:none}
+.warn{background:var(--redtint);border:3px solid var(--red);border-radius:.6em;padding:.55em .7em;margin:.5em 0;font-size:.76em;color:#7c1a15}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<div id="bar">
+  <button class="bt" id="bMenu" type="button">Menu</button>
+  <span class="ttl" id="bTitle">Are You OK?</span>
+  <span class="pill" id="bPill">0 / 0</span>
+  <button class="bt" id="bText" type="button">Aa</button>
+  <button class="bt" id="bFull" type="button">Full</button>
+</div>
+<main id="main"></main>
+<button class="jump" id="jump" type="button"></button>
+<div id="nav">
+  <div class="tip" id="navTip"></div>
+  <div class="row">
+    <button type="button" id="navBack">Back</button>
+    <button type="button" id="navNext" class="go">Next</button>
+  </div>
+</div>
+<script>
+/* ============================================================
+   1. AUDIO CLIP REGISTRY
+   Paste a base64 mp3 data URI between the quotes to embed a
+   recording. While a slot is empty the page reads the script
+   out loud with the device voice instead.
+   ============================================================ */
+var CLIPS = {
+  talk: "",   /* ruok-01-talk.mp3            Grace at the community centre */
+  presA: "",  /* ruok-02-presentation-A.mp3  the one that needs work       */
+  presB: "",  /* ruok-03-presentation-B.mp3  the good one, Alan            */
+  presC: ""   /* ruok-04-presentation-C.mp3  the second good one, Julia    */
+};
+
+var SCRIPTS = {
+  talk: "Hello everyone. My name is Grace. I work at the community centre in Crows Nest. Today I want to tell you about R U OK? Day. R U OK? Day is on Thursday the tenth of September. It is a national day in Australia. On this day we ask the people around us one simple question: Are you OK? Sometimes a friend is not OK. Maybe the person is very quiet. Maybe the person is tired every day. Maybe the person does not come to class. These are small changes, but they are important. When you notice a change, you can start a conversation. You do not need to be an expert. You are not a doctor. You are a friend, and a friend listens. There are four steps. First, ask. Say: Are you OK? Second, listen. Do not talk about yourself. Third, encourage action. Ask: Who can help you? Say: You could talk to your doctor. And fourth, check in. Ask the person again next week. The colour for R U OK? Day is yellow. Many people wear something yellow on that day. Remember, you can ask on any day. You do not need to wait for September. If you are worried about someone, you can call Lifeline on 13 11 14. Thank you for listening.",
+  presA: "Hi. OK so, the steps. You listen to the person. Um, ask the question. Also check in, maybe next week or something. And, um, encourage action, you know, the doctor and things. Yeah. Ask them, that is the first one, sorry, I said that already. There are some more but I think that is enough. Yeah so that is it.",
+  presB: "Good morning everyone. My name is Alan. Today I will tell you how to check in on a friend. There are five steps. First, you should choose a quiet place. A quiet place is important. Nobody hears you there. Second, you must ask a simple question. Say: Are you OK? Three words are enough. Third, you need to listen. This step is the most important step. Do not talk about yourself. Let your friend talk. Fourth, you could encourage action. Say: Who can help you? You could say: You should talk to your doctor. And fifth, you must check in again next week. One week is not a long time, but it shows you remember. So, five steps: choose a quiet place, ask, listen, encourage action, and check in again. The most important step is number three. Listen. Thank you for listening. Are there any questions?",
+  presC: "Good afternoon everyone. My name is Julia. Today I will tell you how to be a good listener. There are five steps. First, you must put your phone away. A phone in your hand says: I am not listening. Second, you should sit down. When you stand up, your friend feels the talk is short. Third, you need to say nothing for ten seconds. Ten seconds is a long time, and it gives your friend time to think. Fourth, you should ask one small question. Say: How long do you feel like this? And fifth, you must say thank you. Say: Thank you for telling me. So, five steps: phone away, sit down, wait, ask one question, and say thank you. Step three is the hard one. Wait, and say nothing. Thank you for listening. Are there any questions?"
+};
+
+/* ============================================================
+   2. THE PARTS
+   ============================================================ */
+var PARTS = [
+{ n:1, group:"The words", title:"The words you need", style:"Words",
+  desc:"Ten words for talking about a friend. Choose the meaning, then use the word.",
+  items:[
+  {t:"mcq",q:"What does notice mean?",opts:["to see that something is different","to say words that help a person do something","to ask a person again some days later"],ans:"to see that something is different",why:"First you notice, then you ask. Your eyes see the change before your mouth says anything."},
+  {t:"mcq",q:"What does encourage mean?",opts:["to say words that help a person do something","to see that something is different","help that you give to a person"],ans:"to say words that help a person do something",why:"Encourage action is step three. You say: Who can help you?"},
+  {t:"mcq",q:"What does check in mean?",opts:["to ask a person again some days later","to call a doctor for a friend","to talk about your own week"],ans:"to ask a person again some days later",why:"Check in is the last step. You come back next week and you ask again."},
+  {t:"mcq",q:"What is a helpline?",opts:["a phone number you can call for help","a person who works at a community centre","a long talk between two friends"],ans:"a phone number you can call for help",why:"Lifeline is a helpline. The number is 13 11 14."},
+  {t:"mcq",q:"My friend is usually happy and busy. This week my friend is very ______ .",opts:["quiet","worried","support"],ans:"quiet",why:"Quiet means not talking much. It is a change other people can see."},
+  {t:"mcq",q:"I am ______ about my neighbour. Nobody sees this person now.",opts:["worried","quiet","noticed"],ans:"worried",why:"Worried is a feeling. You think about a problem and you do not feel good."},
+  {t:"mcq",q:"A ______ is a talk between two people. It is not a speech.",opts:["conversation","helpline","change"],ans:"conversation",why:"A conversation goes two ways. You talk and then you listen."},
+  {t:"mcq",q:"Good friends and family give us ______ every day.",opts:["support","a change","a helpline"],ans:"support",why:"Support is help that you give. Give support is a word partner."}
+]},
+
+{ n:2, group:"The words", title:"Words that go together", style:"Words",
+  desc:"Word partners and two word verbs. These make your talk sound natural.",
+  items:[
+  {t:"mcq",q:"Which word goes with start?",opts:["a conversation","worried","thank you"],ans:"a conversation",why:"Start a conversation. You cannot start a worried."},
+  {t:"mcq",q:"Which word goes with ask?",opts:["a question","support","a change"],ans:"a question",why:"Ask a question. This is step two in the conversation."},
+  {t:"mcq",q:"Which word goes with notice?",opts:["a change","a helpline","thank you"],ans:"a change",why:"Notice a change. You need a thing you can see or hear."},
+  {t:"mcq",q:"Which word goes with make?",opts:["time for a friend","a question","worried"],ans:"time for a friend",why:"Make time means you stop other things and you sit down."},
+  {t:"mcq",q:"I ______ my neighbour every Friday. I knock on the door and say hello.",opts:["check in on","look after","open up"],ans:"check in on",why:"Check in on a person means you ask that person again later."},
+  {t:"mcq",q:"Some people do not ______ on the first day. Give them time.",opts:["open up","reach out to","check in on"],ans:"open up",why:"Open up means you start to talk about your real feelings."},
+  {t:"mcq",q:"You give a lot of support to other people. You also need to ______ yourself.",opts:["look after","open up","cheer up"],ans:"look after",why:"Look after yourself means take care of yourself. You come first too."},
+  {t:"mcq",q:"A new student is in your class and knows nobody. Please ______ this person this week.",opts:["reach out to","open up","look after"],ans:"reach out to",why:"Reach out to a person means you make contact and you offer help."}
+]},
+
+{ n:3, group:"Listening", title:"Listen to the talk", style:"Listening", audio:"talk",
+  desc:"Grace works at a community centre. Listen, then answer. You can listen again at any time.",
+  items:[
+  {t:"mcq",q:"What is the talk about?",opts:["What R U OK? Day is and how to ask the question.","How to get a job as a volunteer.","How to make an appointment with a doctor.","The colours people wear in September."],ans:"What R U OK? Day is and how to ask the question.",why:"The other three ideas are in the talk in a small way. They are not the main idea."},
+  {t:"mcq",q:"R U OK? Day is on a Thursday this year.",opts:["True","False"],ans:"True",why:"Grace says Thursday the tenth of September."},
+  {t:"mcq",q:"You must be a doctor to ask the question.",opts:["True","False"],ans:"False",why:"Grace says you do not need to be an expert. You are a friend, and a friend listens."},
+  {t:"mcq",q:"How many steps are in the conversation?",opts:["three","four","five"],ans:"four",why:"Four steps for your friend: ask, listen, encourage action, check in. Your class talk has five. You add one step at the front: choose a quiet place."},
+  {t:"mcq",q:"What is the colour for the day?",opts:["yellow","blue","green"],ans:"yellow",why:"Many people wear something yellow on that day."},
+  {t:"mcq",q:"What is the number for Lifeline?",opts:["13 11 14","1300 22 4636","13 14 50"],ans:"13 11 14",why:"13 11 14 is Lifeline. It is open every day and every night."},
+  {t:"mcq",q:"What is step four in the conversation?",opts:["check in again next week","ask the question","listen quietly"],ans:"check in again next week",why:"Ask, listen, encourage action, check in. Check in comes last."}
+]},
+
+{ n:4, group:"Listening", title:"Two speakers: A and B", style:"Listening", audio:"pres",
+  desc:"Two people talk about the same topic. One talk is ready. One talk is not ready. Listen to both.",
+  items:[
+  {t:"mcq",q:"Which speaker says hello and gives a name?",opts:["Speaker A","Speaker B"],ans:"Speaker B",why:"Speaker B says: Good morning everyone. My name is Alan. Your class needs your name at the start."},
+  {t:"mcq",q:"Which speaker says um and sorry?",opts:["Speaker A","Speaker B"],ans:"Speaker A",why:"Um and sorry take your class away from your steps. Stop for one second instead."},
+  {t:"mcq",q:"Which speaker says the topic at the start?",opts:["Speaker A","Speaker B"],ans:"Speaker B",why:"Today I will tell you how to check in on a friend. The first six words never change."},
+  {t:"mcq",q:"Which speaker gives the steps in the wrong order?",opts:["Speaker A","Speaker B"],ans:"Speaker A",why:"Speaker A says listen first and asks after. Your class cannot follow steps in the wrong order."},
+  {t:"mcq",q:"Which speaker says how many steps there are?",opts:["Speaker A","Speaker B"],ans:"Speaker B",why:"There are five steps. Now your class knows how long your talk is."},
+  {t:"mcq",q:"Which speaker never uses should, must or need to?",opts:["Speaker A","Speaker B"],ans:"Speaker A",why:"A modal verb tells your class how strong the instruction is. You need at least one."},
+  {t:"mcq",q:"Which speaker uses first, second and third?",opts:["Speaker A","Speaker B"],ans:"Speaker B",why:"Order words tell your class where you are in the talk."},
+  {t:"mcq",q:"Which speaker says the most important step two times?",opts:["Speaker A","Speaker B"],ans:"Speaker B",why:"Your class hears your words one time only. So you say the important step again."}
+]},
+
+{ n:5, group:"Your instructions", title:"Five steps in order", style:"Order words",
+  desc:"Order words hold your talk together. Put the steps in the right order.",
+  items:[
+  {t:"mcq",q:"______ , choose a quiet place.",opts:["First","Second","Finally"],ans:"First",why:"First comes at the start. Put a comma after it, then stop for one second."},
+  {t:"mcq",q:"______ , listen. Do not talk about yourself.",opts:["Third","First","Finally"],ans:"Third",why:"Ask is second, so listen is third."},
+  {t:"mcq",q:"______ , encourage action. Say: Who can help you?",opts:["After that","First","Second"],ans:"After that",why:"After that works like fourth. Both are correct in a talk."},
+  {t:"mcq",q:"______ , check in again next week.",opts:["Finally","Second","After that"],ans:"Finally",why:"Finally tells your class this is the last step."},
+  {t:"seq",q:"Put the five steps of your talk in order. Tap them one by one.",strips:["Choose a quiet place.","Ask the question.","Listen quietly.","Encourage action.","Check in next week."],why:"Choose a quiet place comes first in your talk. The conversation has four steps. Your talk has five."},
+  {t:"seq",q:"Put the parts of a good talk in order. Tap them one by one.",strips:["Say hello to the class.","Say your name.","Say your topic.","Say how many steps there are.","Give the five steps, one by one.","Say the most important step again.","Say thank you to the class."],why:"Hello, name, topic, how many, the steps, the important step again, thank you. Every good talk uses this order."},
+  {t:"mcq",q:"When do you tell your class how many steps there are?",opts:["Before the first step.","After the last step.","In the middle of the talk."],ans:"Before the first step.",why:"Your class needs the number early. Then they can follow you and count with you."}
+]},
+
+{ n:6, group:"Your instructions", title:"How strong is your instruction?", style:"Modal verbs",
+  desc:"must, need to, should, could. Each one has a different strength.",
+  items:[
+  {t:"mcq",q:"You ______ call 000 when a person is in danger.",opts:["must","could","should"],ans:"must",why:"Must is very strong. There is no other choice."},
+  {t:"mcq",q:"You ______ make a cup of tea first. It is one idea.",opts:["could","must","need to"],ans:"could",why:"Could is soft. It is one idea of many ideas."},
+  {t:"mcq",q:"You ______ ask in a quiet place. It is the best way.",opts:["should","must","could"],ans:"should",why:"Should is good advice. It is the best thing to do."},
+  {t:"mcq",q:"You ______ listen. You cannot help a person without this.",opts:["need to","could","should"],ans:"need to",why:"Need to is strong. It is necessary."},
+  {t:"mcq",q:"You ______ send a message. A phone call is also fine.",opts:["could","must","need to"],ans:"could",why:"There are two good ways here, so the instruction is soft."},
+  {t:"mcq",q:"Which sentence is the strongest?",opts:["You must put your phone away.","You should put your phone away.","You could put your phone away."],ans:"You must put your phone away.",why:"Must is the strongest. Should is advice. Could is one idea."},
+  {t:"mcq",q:"How many modal verbs do you need in your talk?",opts:["At least one.","None.","One in every sentence."],ans:"At least one.",why:"You need at least one, and your teacher listens for it. Every sentence is too many, and they all sound the same."}
+]},
+
+{ n:7, group:"Your instructions", title:"Say it like an instruction", style:"Grammar",
+  desc:"The verb goes first. And the facts in your talk need the right verb ending.",
+  items:[
+  {t:"mcq",q:"Say this as an instruction: You ask the question.",opts:["Ask the question.","Asking the question.","You are asking the question."],ans:"Ask the question.",why:"An instruction starts with the verb. There is no you at the start."},
+  {t:"mcq",q:"Say this as an instruction: You do not use your phone.",opts:["Do not use your phone.","Not use your phone.","You not use your phone."],ans:"Do not use your phone.",why:"For a negative instruction, use Do not and then the verb."},
+  {t:"mcq",q:"Which one is an instruction?",opts:["Come back next week.","I come back next week.","Coming back next week."],ans:"Come back next week.",why:"The verb comes first. The other two tell your class about you, not about them."},
+  {t:"mcq",q:"Which sentence is correct?",opts:["Many people wear yellow on that day.","Many people wears yellow on that day.","Many people wearing yellow on that day."],ans:"Many people wear yellow on that day.",why:"People is more than one, so the verb takes no s."},
+  {t:"mcq",q:"Which sentence is correct?",opts:["A good friend listens quietly.","A good friend listen quietly.","A good friend listening quietly."],ans:"A good friend listens quietly.",why:"One friend, so the verb takes s."},
+  {t:"mcq",q:"Which sentence is correct?",opts:["Lifeline is open every night.","Lifeline are open every night.","Lifeline open every night."],ans:"Lifeline is open every night.",why:"Lifeline is one thing, so it takes is."},
+  {t:"mcq",q:"Which sentence is correct?",opts:["My neighbour needs support this month.","My neighbour need support this month.","My neighbour needing support this month."],ans:"My neighbour needs support this month.",why:"One neighbour, so the verb takes s. This is a fact, so use the simple present."}
+]},
+
+{ n:8, group:"Your instructions", title:"Say it two times", style:"Repeat",
+  desc:"Your class hears your words one time only. So you say the important information again.",
+  items:[
+  {t:"mcq",q:"Listen quietly. Which line says it again?",opts:["Say nothing for ten seconds. Ten seconds is a long time.","One week is not a long time.","Three words are enough."],ans:"Say nothing for ten seconds. Ten seconds is a long time.",why:"Say the same idea in other words. Do not just say it louder."},
+  {t:"mcq",q:"Choose a quiet place. Which line says it again?",opts:["A quiet place is important. Nobody hears you there.","A phone in your hand says: I am not listening.","Do not use long sentences."],ans:"A quiet place is important. Nobody hears you there.",why:"You say why it is important. That is one good way to say it again."},
+  {t:"mcq",q:"Put your phone away. Which line says it again?",opts:["A phone in your hand says: I am not listening.","Ten seconds is a long time.","One week is not a long time."],ans:"A phone in your hand says: I am not listening.",why:"This line gives the reason, so your class remembers it."},
+  {t:"mcq",q:"Come back next week. Which line says it again?",opts:["One week is not a long time, but it shows you remember.","Nobody hears you there.","Three words are enough."],ans:"One week is not a long time, but it shows you remember.",why:"Say it again in other words, and your class hears the idea two times."},
+  {t:"mcq",q:"Ask the question in a simple way. Which line says it again?",opts:["Do not use long sentences. Three words are enough.","Ten seconds is a long time.","Nobody hears you there."],ans:"Do not use long sentences. Three words are enough.",why:"Are you OK? is three words. Short is strong."},
+  {t:"mcq",q:"Where do you say the most important step again?",opts:["Just after that step, and again in your summary at the end.","Only at the very start of your talk.","Only when the class asks a question."],ans:"Just after that step, and again in your summary at the end.",why:"Two times is enough. More than two times and your class stops listening."}
+]},
+
+{ n:9, group:"Your instructions", title:"Your hands, your picture, your voice", style:"Delivery",
+  desc:"Your class listens with their eyes too. Hands, picture and slow speaking all help.",
+  items:[
+  {t:"mcq",q:"You say: There are five steps. What do your hands do?",opts:["Show five fingers.","Hold one hand flat and move it down.","Hold your picture next to your face."],ans:"Show five fingers.",why:"Your hands show the number. Your class sees it and hears it at the same time."},
+  {t:"mcq",q:"You say: First, choose a quiet place. What do your hands do?",opts:["Show one finger.","Show five fingers.","Put both hands down."],ans:"Show one finger.",why:"One finger for step one. Two fingers for step two. Your class can count with you."},
+  {t:"mcq",q:"You say: Listen quietly. What do your hands do?",opts:["Hold one hand flat and move it down slowly.","Show five fingers.","Point at the door."],ans:"Hold one hand flat and move it down slowly.",why:"A slow hand makes your voice slow too."},
+  {t:"mcq",q:"You say: Look at this picture. What do you do?",opts:["Hold the picture up next to your face.","Hold the picture in front of your mouth.","Put the picture on the table and look down."],ans:"Hold the picture up next to your face.",why:"Next to your face, not in front of your mouth. Your class needs to see you and hear you."},
+  {t:"mcq",q:"What goes in your picture?",opts:["One simple drawing for one idea.","All five steps in small writing.","Your whole talk in full sentences."],ans:"One simple drawing for one idea.",why:"One picture, one idea. No sentences and no small writing."},
+  {t:"mcq",q:"In your notes, the mark // means:",opts:["stop for one second","speak faster","say the word two times"],ans:"stop for one second",why:"One second feels long to you. It does not feel long to your class."},
+  {t:"mcq",q:"Good morning everyone. // My name is Coco. Which words are loud?",opts:["morning and Coco","everyone and my","is and name"],ans:"morning and Coco",why:"The loud words carry the meaning. Your name is new information, so your name is loud."}
+]},
+
+{ n:10, group:"Your talk", title:"Record your talk", style:"Speaking", mic:true,
+  desc:"Four recordings on your phone. Your teacher listens to them later.",
+  items:[
+  {t:"rec",id:"r1",q:"Recording 1: your first words",secs:25,
+   must:["Say hello to the class.","Say your name.","Say your topic: Today I will tell you how to ...","Say how many steps there are."],
+   why:"Four things, about fifteen seconds. Stop for one second after each one."},
+  {t:"rec",id:"r2",q:"Recording 2: steps 1, 2 and 3",secs:50,
+   must:["Use an order word for each step.","Use should, must or need to at least one time.","Say the steps in the right order.","Speak slowly. Stop after each step."],
+   why:"Three steps, about thirty seconds. Slow is good. Slow sounds ready."},
+  {t:"rec",id:"r3",q:"Recording 3: steps 4 and 5, then the important step again",secs:50,
+   must:["Give step 4 and step 5 with order words.","Say the most important step again in other words.","Say why that step is the most important.","Say thank you at the end."],
+   why:"Your class hears your words one time only. The repeat is what they remember."},
+  {t:"rec",id:"r4",q:"Recording 4: your whole talk",secs:130,
+   must:["Hello, your name, your topic, how many steps.","Five steps in order, with order words.","At least one modal verb: should, must or need to.","The most important step said two times.","Thank you at the end."],
+   why:"One minute to two minutes. This is the full talk. Listen to it, then record it again and make it better."}
+]},
+
+{ n:11, group:"Your talk", title:"Check your own talk", style:"Review",
+  desc:"Listen to your last recording. Answer Yes or Not yet. This is not a test.",
+  items:[
+  {t:"self",q:"Did I say hello to the class?"},
+  {t:"self",q:"Did I say my name?"},
+  {t:"self",q:"Did I say my topic?"},
+  {t:"self",q:"Did I say how many steps there are?"},
+  {t:"self",q:"Did I give the steps in order?"},
+  {t:"self",q:"Did I use order words?"},
+  {t:"self",q:"Did I use should, must or need to?"},
+  {t:"self",q:"Did I say the most important step two times?"},
+  {t:"self",q:"Did I hold up my picture?"},
+  {t:"self",q:"Did I use my hands for the numbers?"},
+  {t:"self",q:"Did I speak slowly and stop between the steps?"},
+  {t:"self",q:"Did I say thank you at the end?"}
+]}
+];
+/* ============================================================
+   3. STATE AND STORAGE
+   ============================================================ */
+var KEY = "vu23520_are_you_ok_ext_v1";
+var ROSTER = "vu23520_are_you_ok_roster_v1";
+var CLASSKEY = "vu23520_are_you_ok_class_v1";
+var ALPHA = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+var B36 = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+
+var S = { name:"", ans:{}, ord:{}, seqp:{}, self:{}, recs:{}, view:{ v:"home" }, blocked:0, tsize:0 };
+var STORE_OK = true;
+var main, jump;
+
+function storageProbe(){
+  try{ localStorage.setItem("__p","1"); localStorage.removeItem("__p"); return true; }
+  catch(e){ return false; }
+}
+function save(){
+  if(!STORE_OK) return;
+  try{
+    localStorage.setItem(KEY, JSON.stringify({
+      name:S.name, ans:S.ans, ord:S.ord, seqp:S.seqp, self:S.self, recs:S.recs, tsize:S.tsize
+    }));
+  }catch(e){}
+}
+function load(){
+  if(!STORE_OK) return;
+  try{
+    var raw = localStorage.getItem(KEY); if(!raw) return;
+    var o = JSON.parse(raw); if(!o) return;
+    S.name = o.name||""; S.ans = o.ans||{}; S.ord = o.ord||{}; S.seqp = o.seqp||{};
+    S.self = o.self||{}; S.recs = o.recs||{}; S.tsize = o.tsize||0;
+  }catch(e){}
+}
+function readList(k){
+  if(!STORE_OK) return [];
+  try{ var r = localStorage.getItem(k); return r ? (JSON.parse(r)||[]) : []; }catch(e){ return []; }
+}
+function writeList(k, arr){
+  if(!STORE_OK) return;
+  try{ localStorage.setItem(k, JSON.stringify(arr)); }catch(e){}
+}
+
+/* ============================================================
+   4. SMALL HELPERS
+   ============================================================ */
+function esc(s){
+  return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
+}
+function shuffle(a){
+  var i, j, t;
+  for(i=a.length-1;i>0;i--){ j=Math.floor(Math.random()*(i+1)); t=a[i]; a[i]=a[j]; a[j]=t; }
+  return a;
+}
+function order(key, len){
+  if(!S.ord[key]){
+    var idx = [], i;
+    for(i=0;i<len;i++) idx.push(i);
+    S.ord[key] = shuffle(idx);
+    save();
+  }
+  return S.ord[key];
+}
+function itemKey(p,i){ return p + "-" + i; }
+function el(id){ return document.getElementById(id); }
+
+/* ---- scoring ---- */
+function partStats(pi){
+  var P = PARTS[pi], done = 0, right = 0, i, k, a;
+  for(i=0;i<P.items.length;i++){
+    k = itemKey(P.n, i);
+    if(P.items[i].t === "self"){ if(S.self[k]) { done++; if(S.self[k]==="yes") right++; } }
+    else if(P.items[i].t === "rec"){ if(S.recs[P.items[i].id]) { done++; right++; } }
+    else { a = S.ans[k]; if(a){ done++; if(a.ok) right++; } }
+  }
+  return { done:done, right:right, total:P.items.length };
+}
+function totalStats(){
+  var d=0,r=0,t=0,i,s;
+  for(i=0;i<9;i++){ s=partStats(i); d+=s.done; r+=s.right; t+=s.total; }
+  return { done:d, right:r, total:t };
+}
+function anyProgress(){
+  var i,s;
+  for(i=0;i<PARTS.length;i++){ s=partStats(i); if(s.done>0) return true; }
+  return false;
+}
+
+/* ---- report code: 11 letters (count per part) + 3 base36 (done mask) + 1 check ---- */
+function makeCode(){
+  var letters = "", mask = 0, i, s;
+  for(i=0;i<PARTS.length;i++){
+    s = partStats(i);
+    letters += ALPHA.charAt(Math.min(s.right, 25));
+    if(s.done === s.total) mask += Math.pow(2, i);
+  }
+  var m = "", v = mask, j;
+  for(j=0;j<3;j++){ m = B36.charAt(v % 36) + m; v = Math.floor(v/36); }
+  var body = letters + m, sum = 0;
+  for(i=0;i<body.length;i++) sum += body.charCodeAt(i) * (i+1);
+  return body + B36.charAt(sum % 36);
+}
+function readCode(code){
+  var c = String(code).toUpperCase().replace(/[^A-Z0-9]/g,"");
+  if(c.length !== 15) return null;
+  var body = c.substring(0,14), sum = 0, i;
+  for(i=0;i<body.length;i++) sum += body.charCodeAt(i) * (i+1);
+  if(B36.charAt(sum % 36) !== c.charAt(14)) return null;
+  var mask = B36.indexOf(c.charAt(11))*1296 + B36.indexOf(c.charAt(12))*36 + B36.indexOf(c.charAt(13));
+  var rows = [];
+  for(i=0;i<11;i++){
+    rows.push({
+      n: PARTS[i].n, title: PARTS[i].title, right: ALPHA.indexOf(c.charAt(i)),
+      total: PARTS[i].items.length, done: (mask & Math.pow(2,i)) ? true : false
+    });
+  }
+  return rows;
+}
+function reportText(){
+  var i, s, out = [], t = totalStats();
+  out.push("Are You OK? Speak and Record");
+  out.push("Student: " + (S.name || "no name"));
+  out.push("Code: " + makeCode());
+  out.push("Score in parts 1 to 9: " + t.right + " out of " + t.total);
+  out.push("");
+  for(i=0;i<PARTS.length;i++){
+    s = partStats(i);
+    if(PARTS[i].n === 10) out.push("Part 10 " + PARTS[i].title + ": " + s.done + " of 4 recordings made");
+    else if(PARTS[i].n === 11) out.push("Part 11 " + PARTS[i].title + ": " + s.right + " Yes out of " + s.total);
+    else out.push("Part " + PARTS[i].n + " " + PARTS[i].title + ": " + s.right + " right out of " + s.total + (s.done<s.total ? " (" + (s.total-s.done) + " not answered)" : ""));
+  }
+  return out.join("\n");
+}
+
+/* ============================================================
+   5. TOP BAR AND NAV
+   ============================================================ */
+function setBar(title, pill){
+  el("bTitle").textContent = title;
+  el("bPill").textContent = pill;
+}
+function setNav(tip, backOn, nextLabel, nextClass, nextOn){
+  el("navTip").textContent = tip || "";
+  var b = el("navBack"), n = el("navNext");
+  b.disabled = !backOn;
+  n.textContent = nextLabel;
+  n.className = nextClass;
+  n.disabled = !nextOn;
+}
+function scrollTop(){ window.scrollTo(0,0); }
+
+/* ============================================================
+   6. ROUTER
+   ============================================================ */
+function go(v, extra){
+  S.view = { v:v };
+  if(extra) for(var k in extra) S.view[k] = extra[k];
+  S.blocked = 0;
+  try{ if(typeof MIC !== "undefined" && MIC.id) stopRec(); }catch(e){}
+  stopAllAudio();
+  render();
+  scrollTop();
+}
+function render(){
+  var v = S.view.v;
+  jump.className = "jump";
+  if(v === "home") return renderHome();
+  if(v === "part") return renderPart();
+  if(v === "results") return renderResults();
+  if(v === "teacher") return renderTeacher();
+  if(v === "check") return renderCheck();
+  if(v === "name") return renderName();
+  if(v === "kb") return renderKB();
+  if(v === "reset") return renderReset();
+  renderHome();
+}
+
+/* ============================================================
+   7. HOME
+   ============================================================ */
+function renderHome(){
+  var t = totalStats(), i, s, h = [], lastGroup = "";
+  setBar("Are You OK?", t.right + " / " + t.total);
+  setNav("Tap a part to start. Your work is saved on this phone.", false, "Results", "go", true);
+
+  h.push('<div class="wrap">');
+  h.push('<p class="eyebrow">EAL Level 2 . Speaking practice</p>');
+  h.push('<h1>Are You OK? Speak and Record</h1>');
+  h.push('<p class="sub">Eleven parts. Nine parts you answer, one part you record, one part you check yourself. Your teacher sees your results at the end.</p>');
+
+  if(!STORE_OK){
+    h.push('<div class="warn"><strong>This phone is not saving your work.</strong> You can still do everything, but do not close this page. Finish, then send your results to your teacher.</div>');
+  }
+  h.push('<button class="mcard" data-a="name" type="button"><span class="step">Your name</span>'+
+         '<span class="name">'+ (S.name ? esc(S.name) : "Tap here and put your name in") +'</span>'+
+         '<span class="desc">Your teacher needs your name on your results.</span></button>');
+
+  for(i=0;i<PARTS.length;i++){
+    if(PARTS[i].group !== lastGroup){
+      lastGroup = PARTS[i].group;
+      h.push('<p class="grouphead">'+ esc(lastGroup) +'</p>');
+    }
+    s = partStats(i);
+    var cls = "mcard" + (PARTS[i].mic ? " mic" : "");
+    var lab, pcls = "score";
+    if(s.done === 0) lab = s.total + " questions";
+    else if(s.done < s.total){ lab = s.done + " of " + s.total + " answered"; pcls = "score part"; }
+    else if(PARTS[i].n === 10){ lab = "4 recordings made"; pcls = "score full"; }
+    else if(PARTS[i].n === 11){ lab = s.right + " Yes out of " + s.total; pcls = "score full"; }
+    else { lab = s.right + " right out of " + s.total; pcls = "score full"; }
+    h.push('<button class="'+cls+'" data-a="part" data-p="'+i+'" type="button">'+
+      '<span class="step">Part '+ PARTS[i].n +' . '+ esc(PARTS[i].style) +'</span>'+
+      '<span class="name">'+ esc(PARTS[i].title) +'</span>'+
+      '<span class="desc">'+ esc(PARTS[i].desc) +'</span>'+
+      '<span class="'+pcls+'">'+ lab +'</span></button>');
+  }
+
+  h.push('<p class="grouphead">When you finish</p>');
+  h.push('<button class="big" data-a="results" type="button">See my results and send them to my teacher</button>');
+  h.push('<button class="big gy" data-a="check" type="button">Check the microphone on this phone</button>');
+  if(anyProgress()) h.push('<button class="big red" data-a="reset1" type="button">Start the whole thing again</button>');
+  h.push('<button class="mini" data-a="teacher" type="button">Teacher</button>');
+  h.push('</div>');
+  main.innerHTML = h.join("");
+}
+
+/* ============================================================
+   8. PART SCREEN
+   ============================================================ */
+function renderPart(){
+  var pi = S.view.p, P = PARTS[pi], s = partStats(pi), i, h = [];
+  setBar("Part " + P.n + ": " + P.title, s.right + " / " + s.total);
+
+  h.push('<div class="wrap">');
+  h.push('<div class="rhead"><span class="k">Part '+P.n+' . '+esc(P.style)+'</span>'+
+    '<h1>'+esc(P.title)+'</h1><p class="d">'+esc(P.desc)+'</p>'+
+    '<span class="live" id="live"></span>'+
+    '<span class="pbar"><i id="pfill"></i></span></div>');
+
+  if(P.audio) h.push(audioBlock(P.audio));
+  if(P.mic) h.push(micIntro());
+
+  for(i=0;i<P.items.length;i++) h.push(renderItem(P, i));
+
+  if(P.n === 11){
+    h.push('<div class="callout"><span class="lead">This part is not a test.</span>'+
+      '<p>Your teacher wants to see what you think about your own talk. Answer Not yet when you know you can do it better.</p></div>');
+  }
+  h.push('<button class="big amb" data-a="retry" data-p="'+pi+'" type="button">Do this part again</button>');
+  h.push('<button class="big gy" data-a="home" type="button">Back to the menu</button>');
+  h.push('</div>');
+  main.innerHTML = h.join("");
+  refreshPart();
+}
+
+function renderItem(P, i){
+  var it = P.items[i], k = itemKey(P.n, i), h = [], a = S.ans[k];
+  var cls = "card";
+  if(it.t === "mcq" || it.t === "seq"){ if(a){ cls += a.ok ? " ok" : " no"; } }
+  if(it.t === "self" && S.self[k]) cls += " ok";
+  if(it.t === "rec" && S.recs[it.id]) cls += " ok";
+
+  h.push('<div class="card '+cls.substring(5)+'" id="c'+k+'" data-k="'+k+'">');
+  h.push('<div class="chead"><span class="num">'+(i+1)+'</span><span class="tag">'+esc(P.style)+'</span></div>');
+
+  if(it.t === "mcq"){
+    h.push('<p class="q">'+esc(it.q)+'</p>');
+    var ord = order(k, it.opts.length), j, o;
+    for(j=0;j<ord.length;j++){
+      o = it.opts[ord[j]];
+      var ocls = "opt";
+      if(a){
+        if(o === it.ans) ocls += " right";
+        else if(o === a.pick) ocls += " wrong";
+      }
+      h.push('<button class="'+ocls+'" type="button" data-a="pick" data-k="'+k+'" data-v="'+esc(o)+'"'+(a?' disabled':'')+'>'+esc(o)+'</button>');
+    }
+    if(a){
+      h.push('<div class="fb '+(a.ok?'good':'bad')+'"><span class="lead">'+(a.ok?'Yes, that is right.':'Not that one.')+'</span>'+esc(it.why)+'</div>');
+      h.push('<button class="mini amb" type="button" data-a="clear" data-k="'+k+'">Change my answer</button>');
+    }
+  }
+
+  else if(it.t === "seq"){
+    h.push('<p class="q">'+esc(it.q)+'</p>');
+    var picked = S.seqp[k] || [], ord2 = order(k, it.strips.length), m;
+    h.push('<div class="built">');
+    if(!picked.length) h.push('<span class="bi">Tap the lines in the right order.</span>');
+    for(m=0;m<picked.length;m++) h.push('<span class="bi">'+(m+1)+'. '+esc(it.strips[picked[m]])+'</span>');
+    h.push('</div>');
+    if(!a){
+      for(m=0;m<ord2.length;m++){
+        var used = picked.indexOf(ord2[m]) > -1;
+        h.push('<button class="chip'+(used?' used':'')+'" type="button" data-a="seq" data-k="'+k+'" data-v="'+ord2[m]+'"'+(used?' disabled':'')+'>'+esc(it.strips[ord2[m]])+'</button>');
+      }
+      if(picked.length) h.push('<button class="mini" type="button" data-a="sequndo" data-k="'+k+'">Take the last one back</button>');
+    } else {
+      h.push('<div class="fb '+(a.ok?'good':'bad')+'"><span class="lead">'+(a.ok?'Yes, that is the right order.':'That order is not right.')+'</span>'+esc(it.why)+'</div>');
+      if(!a.ok){
+        h.push('<div class="fb info"><span class="lead">The right order is:</span>'+esc(it.strips.join("  /  "))+'</div>');
+      }
+      h.push('<button class="mini amb" type="button" data-a="clear" data-k="'+k+'">Do this one again</button>');
+    }
+  }
+
+  else if(it.t === "self"){
+    var v = S.self[k];
+    h.push('<p class="q">'+esc(it.q)+'</p>');
+    h.push('<button class="opt'+(v==="yes"?" right":"")+'" type="button" data-a="self" data-k="'+k+'" data-v="yes">Yes</button>');
+    h.push('<button class="opt'+(v==="not"?" pick":"")+'" type="button" data-a="self" data-k="'+k+'" data-v="not">Not yet</button>');
+    if(v) h.push('<button class="mini amb" type="button" data-a="selfclear" data-k="'+k+'">Change my answer</button>');
+  }
+
+  else if(it.t === "rec"){
+    h.push(recBlock(it));
+  }
+
+  h.push('</div>');
+  return h.join("");
+}
+
+function refreshPart(){
+  if(S.view.v !== "part") return;
+  var pi = S.view.p, P = PARTS[pi], s = partStats(pi);
+  var live = el("live"), fill = el("pfill");
+  if(live){
+    if(P.n === 10) live.textContent = "This part: " + s.done + " of 4 recordings made";
+    else if(P.n === 11) live.textContent = "This part: " + s.done + " of " + s.total + " answered";
+    else live.textContent = "This part: " + s.right + " correct out of " + s.done + " answered";
+  }
+  if(fill) fill.style.width = Math.round(100 * s.done / s.total) + "%";
+  setBar("Part " + P.n + ": " + P.title, s.right + " / " + s.total);
+
+  var left = s.total - s.done, last = (pi === PARTS.length - 1);
+  if(left > 0){
+    setNav("Answer every question on this page. Then the button turns green.", true,
+      left + " left on this page", "wait", true);
+    jump.className = "jump on";
+    jump.textContent = left + (left===1 ? " question left. Take me there" : " questions left. Take me there");
+  } else {
+    setNav(last ? "You have finished the last part." : "This part is finished. Well done.", true,
+      last ? "See my results" : "Next part", "done", true);
+    jump.className = "jump";
+  }
+  if(S.blocked >= 2 && left > 0){
+    var b = el("skipbtn");
+    if(!b){
+      var wrap = main.querySelector(".wrap");
+      if(wrap){
+        var d = document.createElement("button");
+        d.className = "mini amb"; d.id = "skipbtn"; d.type = "button";
+        d.setAttribute("data-a","skip");
+        d.textContent = "Leave this page for now";
+        wrap.appendChild(d);
+      }
+    }
+  }
+}
+
+function firstUnanswered(){
+  var pi = S.view.p, P = PARTS[pi], i, k, it;
+  for(i=0;i<P.items.length;i++){
+    it = P.items[i]; k = itemKey(P.n, i);
+    if(it.t === "self"){ if(!S.self[k]) return k; }
+    else if(it.t === "rec"){ if(!S.recs[it.id]) return k; }
+    else if(!S.ans[k]) return k;
+  }
+  return null;
+}
+function goToFirstUnanswered(){
+  var k = firstUnanswered(); if(!k) return;
+  var c = el("c"+k); if(!c) return;
+  var y = c.getBoundingClientRect().top + window.pageYOffset - (window.innerHeight/2 - 80);
+  window.scrollTo(0, Math.max(0,y));
+  c.classList.add("flash");
+  setTimeout(function(){ c.classList.remove("flash"); }, 2000);
+}
+
+/* ---- answering ---- */
+function findItem(k){
+  var p = parseInt(k.split("-")[0],10), i = parseInt(k.split("-")[1],10), j;
+  for(j=0;j<PARTS.length;j++) if(PARTS[j].n === p) return { P:PARTS[j], pi:j, it:PARTS[j].items[i], i:i };
+  return null;
+}
+function answerPick(k, v){
+  var f = findItem(k); if(!f) return;
+  S.ans[k] = { pick:v, ok: (v === f.it.ans) };
+  save(); redrawItem(k);
+}
+function answerSelf(k, v){ S.self[k] = v; save(); redrawItem(k); }
+function clearItem(k){
+  delete S.ans[k]; delete S.seqp[k];
+  if(S.ord[k]) delete S.ord[k];
+  save(); redrawItem(k);
+}
+function clearSelf(k){ delete S.self[k]; save(); redrawItem(k); }
+function seqTap(k, v){
+  var f = findItem(k); if(!f) return;
+  var picked = S.seqp[k] || [];
+  picked.push(v); S.seqp[k] = picked;
+  if(picked.length === f.it.strips.length){
+    var ok = true, m;
+    for(m=0;m<picked.length;m++) if(picked[m] !== m) ok = false;
+    S.ans[k] = { pick: picked.join(","), ok: ok };
+  }
+  save(); redrawItem(k);
+}
+function seqUndo(k){
+  var picked = S.seqp[k] || [];
+  picked.pop(); S.seqp[k] = picked; save(); redrawItem(k);
+}
+function redrawItem(k){
+  var f = findItem(k); if(!f) return;
+  var node = el("c"+k); if(!node){ render(); return; }
+  var tmp = document.createElement("div");
+  tmp.innerHTML = renderItem(f.P, f.i);
+  node.parentNode.replaceChild(tmp.firstChild, node);
+  refreshPart();
+}
+
+/* ============================================================
+   9. RESULTS
+   ============================================================ */
+function band(pct){
+  if(pct >= 90) return "Excellent. You are ready to give this talk.";
+  if(pct >= 75) return "Very good. Practise the parts with a red edge.";
+  if(pct >= 60) return "Good work. Do the red parts again before your talk.";
+  if(pct >= 40) return "Keep going. Do parts 5 to 9 again.";
+  return "Start again with parts 1 and 2. Then work forward.";
+}
+function renderResults(){
+  var t = totalStats(), pct = t.total ? Math.round(100*t.right/t.total) : 0, i, s, h = [];
+  setBar("My results", t.right + " / " + t.total);
+  setNav("Show this screen to your teacher, or tap Send.", true, "Menu", "go", true);
+
+  h.push('<div class="wrap">');
+  h.push('<p class="eyebrow">Results</p>');
+  h.push('<h1>'+ (S.name ? esc(S.name) : "Your results") +'</h1>');
+  h.push('<p class="bigscore">'+ t.right +' / '+ t.total +'</p>');
+  h.push('<p class="bandtxt">'+ esc(band(pct)) +'</p>');
+  if(!S.name) h.push('<div class="warn">You have no name on this page. Tap Menu, then put your name in, so your teacher knows who this is.</div>');
+
+  h.push('<div class="tscroll"><table class="gt"><tr><th>Part</th><th>Result</th></tr>');
+  for(i=0;i<PARTS.length;i++){
+    s = partStats(i);
+    var val;
+    if(PARTS[i].n === 10) val = s.done + " of 4 recordings";
+    else if(PARTS[i].n === 11) val = s.right + " Yes, " + (s.done - s.right) + " Not yet";
+    else val = s.right + " of " + s.total + (s.done < s.total ? " (" + (s.total-s.done) + " not answered)" : "");
+    h.push('<tr><td>'+PARTS[i].n+'. '+esc(PARTS[i].title)+'</td><td>'+val+'</td></tr>');
+  }
+  h.push('</table></div>');
+
+  h.push('<h2>Send this to your teacher</h2>');
+  h.push('<button class="big" data-a="share" type="button">Send my results</button>');
+  h.push('<button class="big gy" data-a="copy" type="button">Copy my results</button>');
+  h.push('<p class="sub">If nothing happens, show your teacher the code below.</p>');
+  h.push('<div class="codebox">'+ makeCode() +'</div>');
+  h.push('<button class="big gy" data-a="saveme" type="button">Save my results on this phone for my teacher</button>');
+  h.push('<div class="callout"><span class="lead">Your recordings</span>'+
+    '<p>Recordings do not go in the code. Go to Part 10 and send each recording to your teacher, or play it to your teacher.</p></div>');
+  h.push('<button class="big gy" data-a="home" type="button">Back to the menu</button>');
+  h.push('<button class="big red" data-a="reset1" type="button">Start the whole thing again</button>');
+  h.push('</div>');
+  main.innerHTML = h.join("");
+}
+/* ============================================================
+   10. AUDIO: MODEL CLIPS
+   ============================================================ */
+var AUD = { elems:{}, speaking:false, rate:0.85, prate:1 };
+var IOS = false;
+
+function detectIOS(){
+  var ua = navigator.userAgent || "";
+  if(/iPad|iPhone|iPod/.test(ua)) return true;
+  if(navigator.platform === "MacIntel" && (navigator.maxTouchPoints||0) > 1) return true;
+  return /Safari/.test(ua) && !/Chrome|Chromium|Edg|OPR/.test(ua) && /Apple/.test(navigator.vendor||"");
+}
+function audioEl(id){
+  if(AUD.elems[id]) return AUD.elems[id];
+  var a = document.createElement("audio");
+  a.setAttribute("playsinline",""); a.setAttribute("webkit-playsinline","");
+  a.style.display = "none";
+  document.body.appendChild(a);
+  AUD.elems[id] = a;
+  return a;
+}
+function stopAllAudio(){
+  var k;
+  for(k in AUD.elems){ try{ AUD.elems[k].pause(); }catch(e){} }
+  try{ if(window.speechSynthesis) window.speechSynthesis.cancel(); }catch(e){}
+  AUD.speaking = false;
+}
+function pickVoice(){
+  var vs = [], i, want = ["en-AU","en-GB","en-NZ","en-US","en"], w;
+  try{ vs = window.speechSynthesis.getVoices() || []; }catch(e){ return null; }
+  for(w=0;w<want.length;w++)
+    for(i=0;i<vs.length;i++)
+      if(vs[i].lang && vs[i].lang.indexOf(want[w]) === 0) return vs[i];
+  return null;
+}
+function playClip(kind){
+  stopAllAudio();
+  var data = CLIPS[kind], txt = SCRIPTS[kind];
+  if(data){
+    var a = audioEl("clip_" + kind);
+    a.src = data;
+    try{ a.playbackRate = AUD.prate; }catch(e){}
+    var p = a.play();
+    if(p && p.catch) p.catch(function(e){ note("The audio did not start. " + (e && e.name ? e.name : "")); });
+    return;
+  }
+  if(!window.speechSynthesis){ note("This phone cannot read the talk out loud. Ask your teacher to play it."); return; }
+  var u = new SpeechSynthesisUtterance(txt);
+  u.rate = AUD.rate; u.pitch = 1; u.lang = "en-AU";
+  var v = pickVoice(); if(v) u.voice = v;
+  u.onend = function(){ AUD.speaking = false; };
+  AUD.speaking = true;
+  try{ window.speechSynthesis.speak(u); }catch(e){ note("The talk did not start. " + e.name); }
+}
+function audioBlock(kind){
+  var h = [];
+  if(kind === "pres"){
+    h.push(onePlayer("presA","Speaker A","Listen to the first talk."));
+    h.push(onePlayer("presB","Speaker B","Now listen to the second talk."));
+    return h.join("");
+  }
+  return onePlayer("talk","Grace","A talk about R U OK? Day.");
+}
+function onePlayer(kind, name, cap){
+  var live = CLIPS[kind] ? "" :
+    '<p class="note">There is no recording in this file yet, so the phone reads the talk out loud. It sounds like a robot. That is normal.</p>';
+  return '<div class="audio">'+
+    '<span class="cap">'+esc(cap)+'</span>'+
+    '<p class="nm">'+esc(name)+'</p>'+
+    '<div class="rw">'+
+      '<button type="button" data-a="play" data-c="'+kind+'">Play</button>'+
+      '<button type="button" data-a="stop" class="off">Stop</button>'+
+      '<button type="button" data-a="slow" class="off">Slower</button>'+
+      '<button type="button" data-a="fast" class="off">Faster</button>'+
+    '</div>'+ live +'</div>';
+}
+function note(msg){
+  var n = el("navTip"); if(n) n.textContent = msg;
+}
+
+/* ============================================================
+   11. MICROPHONE
+   Rules kept from the earlier recorder build:
+   no audioSession, no mimeType argument, 250ms timeslice,
+   wait for the last chunk after stop, elements in the document,
+   context created and resumed inside a tap, tracks stopped after use.
+   ============================================================ */
+var MIC = {
+  ctx:null, stream:null, mr:null, chunks:[], id:null, t0:0, timer:null,
+  analyser:null, src:null, meterTimer:null, wav:null, peak:0
+};
+var REC = {};   /* id -> {blob, url, ms, type} */
+
+function ensureCtx(){
+  try{
+    var AC = window.AudioContext || window.webkitAudioContext;
+    if(!AC) return null;
+    if(!MIC.ctx) MIC.ctx = new AC();
+    if(MIC.ctx.state === "suspended" && MIC.ctx.resume) MIC.ctx.resume();
+    return MIC.ctx;
+  }catch(e){ return null; }
+}
+function firstTapCtx(){
+  ensureCtx();
+  document.removeEventListener("pointerdown", firstTapCtx, true);
+  document.removeEventListener("touchstart", firstTapCtx, true);
+  document.removeEventListener("click", firstTapCtx, true);
+}
+function secureOK(){
+  if(location.protocol === "file:") return false;
+  return (window.isSecureContext !== false);
+}
+function micSupported(){
+  return !!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia);
+}
+function micMsg(e){
+  var n = (e && e.name) ? e.name : "Error";
+  if(n === "NotAllowedError") return IOS
+    ? "The microphone is off for this page. Tap aA at the top of the browser, then Website Settings, then allow the Microphone."
+    : "The microphone is blocked. Tap the padlock icon near the address bar and allow the Microphone.";
+  if(n === "NotFoundError") return "This device has no microphone that the page can use.";
+  if(n === "NotReadableError") return "Another app is using the microphone. Close it, then try again.";
+  return "The microphone did not start. " + n + ".";
+}
+function setRecStatus(id, txt, rec){
+  var s = el("st_"+id); if(!s) return;
+  s.innerHTML = (rec ? '<span class="dot"></span>' : "") + esc(txt);
+}
+function startRec(id, secs){
+  if(MIC.id){ stopRec(); return; }
+  if(!secureOK()){
+    setRecStatus(id, "This file was opened from the phone storage, so recording is off. Ask your teacher for the web link.");
+    return;
+  }
+  if(!micSupported()){ setRecStatus(id, "This browser cannot record. Try Chrome or Safari."); return; }
+  ensureCtx();
+  setRecStatus(id, "Starting ...");
+  navigator.mediaDevices.getUserMedia({ audio:true }).then(function(stream){
+    MIC.stream = stream; MIC.id = id; MIC.chunks = []; MIC.peak = 0;
+    try{
+      var ctx = ensureCtx();
+      if(ctx){
+        MIC.src = ctx.createMediaStreamSource(stream);
+        MIC.analyser = ctx.createAnalyser();
+        MIC.analyser.fftSize = 2048;
+        MIC.src.connect(MIC.analyser);
+        meterTick();
+      }
+    }catch(e){}
+    var started = false;
+    try{
+      MIC.mr = new MediaRecorder(stream);   /* no mimeType on purpose */
+      MIC.mr.ondataavailable = function(ev){ if(ev.data && ev.data.size) MIC.chunks.push(ev.data); };
+      MIC.mr.onerror = function(ev){ setRecStatus(id, "The recorder stopped. " + ((ev.error&&ev.error.name)||"")); };
+      MIC.mr.onstop = function(){ finishRec(id); };
+      MIC.mr.start(250);
+      started = true;
+    }catch(e){
+      started = startWav(id);
+      if(!started){ setRecStatus(id, "This browser cannot record. " + (e.name||"")); cleanupMic(); return; }
+    }
+    MIC.t0 = Date.now();
+    tick(id, secs);
+    var btn = el("rb_"+id); if(btn){ btn.textContent = "Stop"; btn.className = "big red"; }
+  }).catch(function(e){
+    setRecStatus(id, micMsg(e));
+    cleanupMic();
+  });
+}
+function tick(id, secs){
+  clearInterval(MIC.timer);
+  MIC.timer = setInterval(function(){
+    if(!MIC.id){ clearInterval(MIC.timer); return; }
+    var s = Math.round((Date.now()-MIC.t0)/1000);
+    setRecStatus(id, "Recording ... " + s + " seconds", true);
+    if(secs && s >= secs) stopRec();
+  }, 250);
+}
+function meterTick(){
+  clearInterval(MIC.meterTimer);
+  MIC.meterTimer = setInterval(function(){
+    if(!MIC.analyser){ clearInterval(MIC.meterTimer); return; }
+    var buf = new Uint8Array(MIC.analyser.fftSize), i, v, sum = 0, pk = 0;
+    MIC.analyser.getByteTimeDomainData(buf);
+    for(i=0;i<buf.length;i++){ v = (buf[i]-128)/128; sum += v*v; if(Math.abs(v)>pk) pk = Math.abs(v); }
+    var rms = Math.sqrt(sum/buf.length);
+    if(rms > MIC.peak) MIC.peak = rms;
+    var m = el("mt_"+MIC.id);
+    if(m) m.style.width = Math.min(100, Math.round(rms*260)) + "%";
+  }, 120);
+}
+function startWav(id){
+  try{
+    var ctx = ensureCtx(); if(!ctx || !MIC.src) return false;
+    var node = ctx.createScriptProcessor(4096, 1, 1);
+    MIC.wav = { node:node, data:[], rate:ctx.sampleRate, len:0 };
+    node.onaudioprocess = function(ev){
+      var d = ev.inputBuffer.getChannelData(0), c = new Float32Array(d.length);
+      c.set(d); MIC.wav.data.push(c); MIC.wav.len += c.length;
+    };
+    MIC.src.connect(node); node.connect(ctx.destination);
+    return true;
+  }catch(e){ return false; }
+}
+function wavBlob(){
+  var w = MIC.wav, i, j, off = 44, n = w.len;
+  var buf = new ArrayBuffer(44 + n*2), view = new DataView(buf);
+  function str(o,s){ for(var q=0;q<s.length;q++) view.setUint8(o+q, s.charCodeAt(q)); }
+  str(0,"RIFF"); view.setUint32(4, 36+n*2, true); str(8,"WAVE"); str(12,"fmt ");
+  view.setUint32(16,16,true); view.setUint16(20,1,true); view.setUint16(22,1,true);
+  view.setUint32(24,w.rate,true); view.setUint32(28,w.rate*2,true);
+  view.setUint16(32,2,true); view.setUint16(34,16,true); str(36,"data");
+  view.setUint32(40, n*2, true);
+  for(i=0;i<w.data.length;i++){
+    for(j=0;j<w.data[i].length;j++){
+      var s = Math.max(-1, Math.min(1, w.data[i][j]));
+      view.setInt16(off, s<0 ? s*0x8000 : s*0x7FFF, true); off += 2;
+    }
+  }
+  return new Blob([view], { type:"audio/wav" });
+}
+function stopRec(){
+  if(!MIC.id) return;
+  clearInterval(MIC.timer);
+  var id = MIC.id;
+  if(MIC.wav){
+    try{ MIC.wav.node.disconnect(); }catch(e){}
+    var b = wavBlob();
+    MIC.wav = null;
+    storeRec(id, b, Date.now()-MIC.t0, "audio/wav");
+    cleanupMic(); return;
+  }
+  try{ MIC.mr.stop(); }catch(e){ finishRec(id); }
+}
+function finishRec(id){
+  var tries = 0;
+  (function waitChunks(){
+    if(!MIC.chunks.length && tries < 12){ tries++; setTimeout(waitChunks, 20); return; }
+    var type = (MIC.mr && MIC.mr.mimeType) ? MIC.mr.mimeType : (detectIOS() ? "audio/mp4" : "audio/webm");
+    if(!type) type = detectIOS() ? "audio/mp4" : "audio/webm";
+    var blob = new Blob(MIC.chunks, { type:type });
+    var ms = Date.now() - MIC.t0;
+    if(blob.size < 256){
+      setRecStatus(id, "Nothing was recorded. Check the microphone, then record again.");
+      cleanupMic(); return;
+    }
+    storeRec(id, blob, ms, type);
+    cleanupMic();
+  })();
+}
+function cleanupMic(){
+  clearInterval(MIC.timer); clearInterval(MIC.meterTimer);
+  try{ if(MIC.stream) MIC.stream.getTracks().forEach(function(t){ t.stop(); }); }catch(e){}
+  try{ if(MIC.src) MIC.src.disconnect(); }catch(e){}
+  MIC.stream = null; MIC.mr = null; MIC.src = null; MIC.analyser = null;
+  MIC.chunks = []; var id = MIC.id; MIC.id = null;
+  if(id){ var b = el("rb_"+id); if(b){ b.textContent = "Record"; b.className = "big amb"; } }
+}
+function storeRec(id, blob, ms, type){
+  if(REC[id] && REC[id].url){ try{ URL.revokeObjectURL(REC[id].url); }catch(e){} }
+  REC[id] = { blob:blob, url:URL.createObjectURL(blob), ms:ms, type:type };
+  S.recs[id] = { ms:ms, type:type, size:blob.size, at:Date.now(), loud:Math.round(MIC.peak*100) };
+  save(); idbPut(id, blob, type);
+  redrawRec(id);
+}
+function dropRec(id){
+  if(REC[id] && REC[id].url){ try{ URL.revokeObjectURL(REC[id].url); }catch(e){} }
+  delete REC[id]; delete S.recs[id]; save(); idbDel(id); redrawRec(id);
+}
+function playRec(id){
+  stopAllAudio();
+  var r = REC[id];
+  if(!r){ setRecStatus(id, "This recording is not on this phone any more. Record it again."); return; }
+  var a = audioEl("rec_"+id);
+  a.src = r.url;
+  var p = a.play();
+  if(p && p.catch) p.catch(function(e){ setRecStatus(id, "It did not play. " + (e.name||"")); });
+}
+function fileName(id){
+  var nm = (S.name || "student").replace(/[^A-Za-z0-9 ]/g,"").replace(/\s+/g,"-");
+  var ext = (REC[id] && REC[id].type && REC[id].type.indexOf("mp4") > -1) ? "m4a"
+          : (REC[id] && REC[id].type && REC[id].type.indexOf("wav") > -1) ? "wav" : "webm";
+  return nm + "-" + id + "." + ext;
+}
+function shareRec(id){
+  var r = REC[id];
+  if(!r){ setRecStatus(id, "There is no recording to send yet."); return; }
+  var name = fileName(id);
+  try{
+    var f = new File([r.blob], name, { type:r.type });
+    if(navigator.canShare && navigator.canShare({ files:[f] }) && navigator.share){
+      navigator.share({ files:[f], title:name, text:"Talk from " + (S.name||"a student") })
+        .catch(function(){ downloadRec(id); });
+      return;
+    }
+  }catch(e){}
+  downloadRec(id);
+}
+function downloadRec(id){
+  var r = REC[id]; if(!r) return;
+  var a = document.createElement("a");
+  a.href = r.url; a.download = fileName(id);
+  document.body.appendChild(a); a.click();
+  setTimeout(function(){ document.body.removeChild(a); }, 500);
+  setRecStatus(id, "Saved on this phone as " + fileName(id) + ". Now send that file to your teacher.");
+}
+
+/* ---- recordings kept between visits ---- */
+var IDB = null;
+function idbOpen(cb){
+  if(!window.indexedDB){ cb(null); return; }
+  try{
+    var rq = indexedDB.open("ruok_recordings", 1);
+    rq.onupgradeneeded = function(){ rq.result.createObjectStore("clips"); };
+    rq.onsuccess = function(){ IDB = rq.result; cb(IDB); };
+    rq.onerror = function(){ cb(null); };
+  }catch(e){ cb(null); }
+}
+function idbPut(id, blob, type){
+  if(!IDB) return;
+  try{ IDB.transaction("clips","readwrite").objectStore("clips").put({ blob:blob, type:type }, id); }catch(e){}
+}
+function idbDel(id){
+  if(!IDB) return;
+  try{ IDB.transaction("clips","readwrite").objectStore("clips").delete(id); }catch(e){}
+}
+function idbLoadAll(cb){
+  if(!IDB){ cb(); return; }
+  var ids = [], k;
+  for(k in S.recs) ids.push(k);
+  if(!ids.length){ cb(); return; }
+  var left = ids.length;
+  ids.forEach(function(id){
+    try{
+      var rq = IDB.transaction("clips","readonly").objectStore("clips").get(id);
+      rq.onsuccess = function(){
+        var v = rq.result;
+        if(v && v.blob) REC[id] = { blob:v.blob, url:URL.createObjectURL(v.blob), ms:(S.recs[id]||{}).ms||0, type:v.type };
+        if(--left === 0) cb();
+      };
+      rq.onerror = function(){ if(--left === 0) cb(); };
+    }catch(e){ if(--left === 0) cb(); }
+  });
+}
+
+/* ---- recording card ---- */
+function micIntro(){
+  var h = [];
+  h.push('<div class="callout"><span class="lead">Before you record</span>'+
+    '<p>Stand up. Hold your phone at your chest, not at your mouth. Speak slowly. Your teacher listens to these later.</p></div>');
+  if(!secureOK()){
+    h.push('<div class="warn">This page was opened from the phone storage, so the microphone is off. Ask your teacher for the web link, then record.</div>');
+  }
+  return h.join("");
+}
+function recBlock(it){
+  var r = S.recs[it.id], h = [], j;
+  h.push('<p class="q">'+esc(it.q)+'</p>');
+  h.push('<p class="qs">Say all of this in one recording:</p><ul class="tick">');
+  for(j=0;j<it.must.length;j++) h.push('<li>'+esc(it.must[j])+'</li>');
+  h.push('</ul>');
+  h.push('<div class="rec">');
+  h.push('<p class="st" id="st_'+it.id+'">'+ (r ? "Recorded. " + Math.round((r.ms||0)/1000) + " seconds." : "Not recorded yet. You have " + it.secs + " seconds.") +'</p>');
+  h.push('<div class="meter"><i id="mt_'+it.id+'"></i></div>');
+  h.push('<button class="big amb" id="rb_'+it.id+'" type="button" data-a="rec" data-i="'+it.id+'" data-s="'+it.secs+'">'+ (r ? "Record it again" : "Record") +'</button>');
+  if(r){
+    h.push('<button class="big" type="button" data-a="playrec" data-i="'+it.id+'">Play it back</button>');
+    h.push('<button class="big gy" type="button" data-a="sharerec" data-i="'+it.id+'">Send this to my teacher</button>');
+    h.push('<button class="mini amb" type="button" data-a="droprec" data-i="'+it.id+'">Delete this recording</button>');
+    if(r.loud !== undefined && r.loud < 12){
+      h.push('<div class="fb bad"><span class="lead">That was very quiet.</span>Hold the phone closer and say it again. In the room, nobody can turn you up.</div>');
+    }
+  }
+  h.push('</div>');
+  h.push('<div class="fb info"><span class="lead">Remember</span>'+esc(it.why)+'</div>');
+  return h.join("");
+}
+function redrawRec(id){
+  var pi = -1, i, j;
+  for(i=0;i<PARTS.length;i++) if(PARTS[i].mic) pi = i;
+  if(S.view.v !== "part" || S.view.p !== pi){ render(); return; }
+  for(j=0;j<PARTS[pi].items.length;j++){
+    if(PARTS[pi].items[j].id === id){ redrawItem(itemKey(PARTS[pi].n, j)); return; }
+  }
+  render();
+}
+
+/* ============================================================
+   12. MICROPHONE CHECK
+   ============================================================ */
+function renderCheck(){
+  var h = [];
+  setBar("Microphone check", "");
+  setNav("Show this table to your teacher if the microphone does not work.", true, "Menu", "go", true);
+  h.push('<div class="wrap">');
+  h.push('<p class="eyebrow">Before you record</p><h1>Check the microphone</h1>');
+  h.push('<p class="sub">Tap Test. Say your name. It records for four seconds and plays it back to you.</p>');
+  h.push('<div class="rec"><p class="st" id="st_test">Not tested yet.</p>'+
+    '<div class="meter"><i id="mt_test"></i></div>'+
+    '<button class="big amb" id="rb_test" type="button" data-a="rec" data-i="test" data-s="4">Test</button>'+
+    '<button class="big" type="button" data-a="playrec" data-i="test">Play it back</button></div>');
+  h.push('<div class="tscroll"><table class="gt"><tr><th>Check</th><th>This phone</th></tr>'+
+    '<tr><td>Browser</td><td>'+esc((navigator.userAgent||"").substring(0,60))+'</td></tr>'+
+    '<tr><td>Address starts with</td><td>'+esc(location.protocol)+'</td></tr>'+
+    '<tr><td>Safe page for recording</td><td>'+(secureOK()?"yes":"no")+'</td></tr>'+
+    '<tr><td>Microphone available</td><td>'+(micSupported()?"yes":"no")+'</td></tr>'+
+    '<tr><td>Recorder available</td><td>'+(window.MediaRecorder?"yes":"no, the page uses a backup recorder")+'</td></tr>'+
+    '<tr><td>Sound engine</td><td>'+(MIC.ctx?MIC.ctx.state:"not started")+'</td></tr>'+
+    '<tr><td>Saving on this phone</td><td>'+(STORE_OK?"yes":"no")+'</td></tr>'+
+    '</table></div>');
+  h.push('<div class="callout"><span class="lead">If you hear nothing</span>'+
+    '<p>Check the silent switch on the side of your phone. Then turn the volume up. Then tap Play it back again.</p></div>');
+  h.push('<button class="big gy" data-a="home" type="button">Back to the menu</button>');
+  h.push('</div>');
+  main.innerHTML = h.join("");
+}
+
+/* ============================================================
+   13. TAP KEYBOARD
+   ============================================================ */
+var KB = { buf:"", mode:"name", title:"", sub:"" };
+function openKB(mode){
+  KB.mode = mode; KB.buf = "";
+  if(mode === "name"){ KB.title = "Put your name in"; KB.sub = "Tap the letters. Your teacher needs your name on your results."; KB.buf = S.name || ""; }
+  if(mode === "code"){ KB.title = "Read a student code"; KB.sub = "Tap the fifteen letters and numbers from the student's phone."; }
+  if(mode === "class"){ KB.title = "Add a name to the class list"; KB.sub = "Tap the letters, then tap Done."; }
+  if(mode === "pin"){ KB.title = "Teacher"; KB.sub = "Tap the four digit code."; }
+  go("kb");
+}
+function renderKB(){
+  var h = [], row = "ABCDEFGHIJKLMNOPQRSTUVWXYZ", i;
+  setBar(KB.title, "");
+  setNav("Tap Done when the words are right.", true, "Menu", "go", true);
+  h.push('<div class="wrap">');
+  h.push('<p class="eyebrow">'+esc(KB.title)+'</p>');
+  h.push('<p class="sub">'+esc(KB.sub)+'</p>');
+  h.push('<p class="kbout" id="kbout">'+ (esc(KB.buf) || "&nbsp;") +'</p>');
+  h.push('<div class="kb">');
+  if(KB.mode === "pin"){
+    for(i=0;i<10;i++) h.push('<button type="button" data-a="kbk" data-v="'+i+'">'+i+'</button>');
+  } else {
+    for(i=0;i<26;i++) h.push('<button type="button" data-a="kbk" data-v="'+row.charAt(i)+'">'+row.charAt(i)+'</button>');
+    for(i=0;i<10;i++) h.push('<button type="button" data-a="kbk" data-v="'+i+'">'+i+'</button>');
+    h.push('<button type="button" class="wide" data-a="kbk" data-v=" ">space</button>');
+  }
+  h.push('<button type="button" class="wide" data-a="kbdel">delete</button>');
+  h.push('</div>');
+  h.push('<button class="big" data-a="kbdone" type="button">Done</button>');
+  h.push('<button class="big gy" data-a="home" type="button">Back to the menu</button>');
+  h.push('</div>');
+  main.innerHTML = h.join("");
+}
+function kbKey(v){
+  if(KB.buf.length >= 40) return;
+  KB.buf += v;
+  var o = el("kbout"); if(o) o.textContent = KB.buf;
+  if(KB.mode === "pin" && KB.buf.length === 4) kbDone();
+}
+function kbDel(){
+  KB.buf = KB.buf.substring(0, KB.buf.length-1);
+  var o = el("kbout"); if(o) o.textContent = KB.buf || " ";
+}
+function titleCase(s){
+  return s.toLowerCase().replace(/(^|\s)([a-z])/g, function(m,a,b){ return a + b.toUpperCase(); }).replace(/\s+/g," ").replace(/^\s|\s$/g,"");
+}
+function kbDone(){
+  if(KB.mode === "name"){ S.name = titleCase(KB.buf); save(); go("home"); return; }
+  if(KB.mode === "class"){
+    var list = readList(CLASSKEY);
+    if(KB.buf.replace(/\s/g,"").length){ list.push(titleCase(KB.buf)); writeList(CLASSKEY, list); }
+    go("teacher"); return;
+  }
+  if(KB.mode === "pin"){
+    if(KB.buf === "2580"){ TEACHER_OK = true; go("teacher"); }
+    else { KB.buf = ""; KB.sub = "That code is not right. Try again."; render(); }
+    return;
+  }
+  if(KB.mode === "code"){
+    var rows = readCode(KB.buf);
+    if(!rows){ KB.buf = ""; KB.sub = "That code is not right. Check every letter and try again."; render(); return; }
+    go("teacher", { rows:rows, code:KB.buf.toUpperCase().replace(/[^A-Z0-9]/g,"") });
+    return;
+  }
+  go("home");
+}
+
+/* ============================================================
+   14. TEACHER
+   ============================================================ */
+var TEACHER_OK = false;
+function renderTeacher(){
+  var h = [], list = readList(CLASSKEY), roster = readList(ROSTER), i;
+  setBar("Teacher", "");
+  setNav("This screen is for the teacher.", true, "Menu", "go", true);
+  h.push('<div class="wrap">');
+  h.push('<p class="eyebrow">Teacher</p><h1>Results and setup</h1>');
+
+  if(S.view.rows){
+    h.push('<h2>Code '+esc(S.view.code)+'</h2>');
+    h.push('<div class="tscroll"><table class="gt"><tr><th>Part</th><th>Right</th><th>Finished</th></tr>');
+    for(i=0;i<S.view.rows.length;i++){
+      var r = S.view.rows[i];
+      var val = (r.n === 10) ? (r.right + " of 4 recordings") : (r.right + " of " + r.total);
+      h.push('<tr><td>'+r.n+'. '+esc(r.title)+'</td><td>'+val+'</td><td>'+(r.done?"yes":"no")+'</td></tr>');
+    }
+    h.push('</table></div>');
+  }
+
+  h.push('<h2>Read a student code</h2>');
+  h.push('<p class="sub">Every student screen shows a fifteen character code at the end. Tap it in here to see the parts behind it.</p>');
+  h.push('<button class="big" data-a="kb" data-v="code" type="button">Enter a code</button>');
+
+  h.push('<h2>Results saved on this device</h2>');
+  if(!roster.length){
+    h.push('<p class="sub">Nothing saved yet. On a shared phone or tablet, a student taps Save my results on this phone at the end, then the next student starts again.</p>');
+  } else {
+    h.push('<div class="tscroll"><table class="gt"><tr><th>Name</th><th>Parts 1 to 9</th><th>Talk</th><th>Code</th></tr>');
+    for(i=0;i<roster.length;i++){
+      h.push('<tr><td>'+esc(roster[i].name||"no name")+'</td><td>'+roster[i].right+' of '+roster[i].total+
+        '</td><td>'+roster[i].recs+' of 4</td><td>'+esc(roster[i].code)+'</td></tr>');
+    }
+    h.push('</table></div>');
+    h.push('<button class="mini amb" data-a="clearroster" type="button">Clear the saved results</button>');
+  }
+
+  h.push('<h2>Class list on this device</h2>');
+  h.push('<p class="sub">Add the names, then a student can tap a name instead of spelling it.</p>');
+  if(list.length){
+    h.push('<p>');
+    for(i=0;i<list.length;i++) h.push('<span class="chip">'+esc(list[i])+'</span>');
+    h.push('</p><button class="mini amb" data-a="clearclass" type="button">Clear the class list</button>');
+  }
+  h.push('<button class="big gy" data-a="kb" data-v="class" type="button">Add a name</button>');
+
+  h.push('<h2>Audio in this file</h2>');
+  h.push('<div class="callout"><span class="lead">Four recordings can be embedded</span>'+
+    '<p>ruok-01-talk, ruok-02-presentation-A, ruok-03-presentation-B, ruok-04-presentation-C. Until they are in the file, Parts 3 and 4 read the scripts with the device voice.</p></div>');
+  h.push('<h2>How to collect the recordings</h2>');
+  h.push('<ul class="tick"><li>Each student taps Send this to my teacher under a recording. The phone opens its own share sheet.</li>'+
+    '<li>If sharing is off, the same button saves the file, and the file name has the student name in it.</li>'+
+    '<li>Recordings stay on the student phone. They are not in the code.</li></ul>');
+  h.push('<button class="big gy" data-a="home" type="button">Back to the menu</button>');
+  h.push('</div>');
+  main.innerHTML = h.join("");
+}
+/* ============================================================
+   15. NAME SCREEN
+   ============================================================ */
+function renderName(){
+  var list = readList(CLASSKEY), h = [], i;
+  setBar("Your name", "");
+  setNav("Your teacher needs your name on your results.", true, "Menu", "go", true);
+  h.push('<div class="wrap">');
+  h.push('<p class="eyebrow">Your name</p><h1>Who is using this phone?</h1>');
+  h.push('<p class="sub">Your name goes on your results and on your recordings.</p>');
+  if(S.name) h.push('<div class="tealbox"><p>Now: <strong>'+esc(S.name)+'</strong></p></div>');
+  if(list.length){
+    h.push('<p class="sub">Tap your name.</p><p>');
+    for(i=0;i<list.length;i++) h.push('<button class="chip" type="button" data-a="pickname" data-v="'+esc(list[i])+'">'+esc(list[i])+'</button>');
+    h.push('</p>');
+  }
+  h.push('<button class="big" data-a="kb" data-v="name" type="button">Spell my name</button>');
+  h.push('<button class="big gy" data-a="home" type="button">Back to the menu</button>');
+  h.push('</div>');
+  main.innerHTML = h.join("");
+}
+
+/* ============================================================
+   16. RESET
+   ============================================================ */
+function renderReset(){
+  var h = [];
+  setBar("Start again", "");
+  setNav("This cannot come back.", true, "Menu", "go", true);
+  h.push('<div class="wrap">');
+  h.push('<p class="eyebrow">Start again</p><h1>Delete all your work?</h1>');
+  h.push('<div class="warn">This deletes your answers, your name and your four recordings on this phone. Send your recordings to your teacher first.</div>');
+  h.push('<button class="big red" data-a="reset2" type="button">Yes, delete it all and start again</button>');
+  h.push('<button class="big gy" data-a="home" type="button">No, keep my work</button>');
+  h.push('</div>');
+  main.innerHTML = h.join("");
+}
+function doReset(){
+  var k;
+  for(k in REC){ if(REC[k] && REC[k].url){ try{ URL.revokeObjectURL(REC[k].url); }catch(e){} } idbDel(k); }
+  REC = {};
+  S.name = ""; S.ans = {}; S.ord = {}; S.seqp = {}; S.self = {}; S.recs = {};
+  try{ localStorage.removeItem(KEY); }catch(e){}
+  save(); go("home");
+}
+
+/* ============================================================
+   17. SENDING RESULTS
+   ============================================================ */
+function shareResults(){
+  var txt = reportText();
+  if(navigator.share){
+    navigator.share({ title:"Are You OK? results", text:txt }).catch(function(){ copyResults(); });
+    return;
+  }
+  copyResults();
+}
+function copyResults(){
+  var txt = reportText();
+  if(navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(txt).then(function(){
+      note("Your results are copied. Open a message to your teacher and paste them in.");
+    }, function(){ note("Copying did not work. Show your teacher the code on this screen."); });
+    return;
+  }
+  note("Copying did not work on this phone. Show your teacher the code on this screen.");
+}
+function saveToDevice(){
+  var t = totalStats(), s10 = partStats(9), roster = readList(ROSTER);
+  roster.push({
+    name:S.name || "no name", code:makeCode(), right:t.right, total:t.total,
+    recs:s10.done, when:Date.now()
+  });
+  writeList(ROSTER, roster);
+  note("Saved on this device for your teacher.");
+}
+
+/* ============================================================
+   18. EVENTS
+   ============================================================ */
+function act(node){
+  var a = node.getAttribute("data-a");
+  var k = node.getAttribute("data-k"), v = node.getAttribute("data-v"), id = node.getAttribute("data-i");
+  if(a === "part"){ go("part", { p: parseInt(node.getAttribute("data-p"),10) }); return; }
+  if(a === "home"){ go("home"); return; }
+  if(a === "results"){ go("results"); return; }
+  if(a === "check"){ go("check"); return; }
+  if(a === "name"){ go("name"); return; }
+  if(a === "pickname"){ S.name = v; save(); go("home"); return; }
+  if(a === "kb"){ openKB(v); return; }
+  if(a === "kbk"){ kbKey(v); return; }
+  if(a === "kbdel"){ kbDel(); return; }
+  if(a === "kbdone"){ kbDone(); return; }
+  if(a === "teacher"){ if(TEACHER_OK) go("teacher"); else openKB("pin"); return; }
+  if(a === "clearroster"){ writeList(ROSTER, []); render(); return; }
+  if(a === "clearclass"){ writeList(CLASSKEY, []); render(); return; }
+  if(a === "reset1"){ go("reset"); return; }
+  if(a === "reset2"){ doReset(); return; }
+  if(a === "share"){ shareResults(); return; }
+  if(a === "copy"){ copyResults(); return; }
+  if(a === "saveme"){ saveToDevice(); return; }
+  if(a === "pick"){ answerPick(k, v); return; }
+  if(a === "clear"){ clearItem(k); return; }
+  if(a === "self"){ answerSelf(k, v); return; }
+  if(a === "selfclear"){ clearSelf(k); return; }
+  if(a === "seq"){ seqTap(k, parseInt(v,10)); return; }
+  if(a === "sequndo"){ seqUndo(k); return; }
+  if(a === "retry"){ retryPart(parseInt(node.getAttribute("data-p"),10)); return; }
+  if(a === "play"){ playClip(node.getAttribute("data-c")); return; }
+  if(a === "stop"){ stopAllAudio(); return; }
+  if(a === "slow"){ AUD.rate = Math.max(0.5, AUD.rate - 0.15); AUD.prate = Math.max(0.6, AUD.prate - 0.15); note("Slower. Tap Play again."); return; }
+  if(a === "fast"){ AUD.rate = Math.min(1.2, AUD.rate + 0.15); AUD.prate = Math.min(1.3, AUD.prate + 0.15); note("Faster. Tap Play again."); return; }
+  if(a === "rec"){ if(MIC.id) stopRec(); else startRec(id, parseInt(node.getAttribute("data-s"),10)); return; }
+  if(a === "playrec"){ playRec(id); return; }
+  if(a === "sharerec"){ shareRec(id); return; }
+  if(a === "droprec"){ dropRec(id); return; }
+  if(a === "skip"){ nextPart(); return; }
+}
+function retryPart(pi){
+  var P = PARTS[pi], i, k;
+  for(i=0;i<P.items.length;i++){
+    k = itemKey(P.n, i);
+    delete S.ans[k]; delete S.seqp[k]; delete S.ord[k]; delete S.self[k];
+  }
+  save(); go("part", { p:pi }); 
+}
+function nextPart(){
+  var pi = S.view.p;
+  if(pi < PARTS.length - 1) go("part", { p:pi+1 });
+  else go("results");
+}
+
+function bind(){
+  main.addEventListener("click", function(ev){
+    var n = ev.target;
+    while(n && n !== main && !n.getAttribute("data-a")) n = n.parentNode;
+    if(n && n !== main && n.getAttribute("data-a")) act(n);
+  });
+  jump.addEventListener("click", function(){ goToFirstUnanswered(); });
+  el("bMenu").addEventListener("click", function(){ go("home"); });
+  el("bText").addEventListener("click", function(){
+    S.tsize = (S.tsize + 1) % 3;
+    document.body.className = S.tsize === 1 ? "t30" : (S.tsize === 2 ? "t36" : "");
+    save();
+  });
+  el("bFull").addEventListener("click", function(){
+    try{
+      if(!document.fullscreenElement && document.documentElement.requestFullscreen) document.documentElement.requestFullscreen();
+      else if(document.exitFullscreen) document.exitFullscreen();
+    }catch(e){}
+  });
+  el("navBack").addEventListener("click", function(){
+    if(S.view.v === "part"){ if(S.view.p > 0) go("part", { p:S.view.p-1 }); else go("home"); }
+    else go("home");
+  });
+  el("navNext").addEventListener("click", function(){
+    if(S.view.v === "home"){ go("results"); return; }
+    if(S.view.v !== "part"){ go("home"); return; }
+    var s = partStats(S.view.p);
+    if(s.done < s.total){ S.blocked++; goToFirstUnanswered(); refreshPart(); return; }
+    nextPart();
+  });
+  document.addEventListener("keydown", function(ev){
+    if(ev.key === "Escape") go("home");
+    if(S.view.v === "part"){
+      if(ev.key === "ArrowLeft") el("navBack").click();
+      if(ev.key === "ArrowRight") el("navNext").click();
+    }
+  });
+  window.addEventListener("pagehide", save);
+  document.addEventListener("visibilitychange", function(){ if(document.hidden) save(); });
+  setInterval(save, 1500);
+  document.addEventListener("pointerdown", firstTapCtx, true);
+  document.addEventListener("touchstart", firstTapCtx, true);
+  document.addEventListener("click", firstTapCtx, true);
+  try{ if(window.speechSynthesis) window.speechSynthesis.onvoiceschanged = function(){}; }catch(e){}
+}
+
+/* ============================================================
+   19. START
+   ============================================================ */
+function boot(){
+  main = el("main"); jump = el("jump");
+  STORE_OK = storageProbe();
+  IOS = detectIOS();
+  load();
+  document.body.className = S.tsize === 1 ? "t30" : (S.tsize === 2 ? "t36" : "");
+  bind();
+  render();
+  idbOpen(function(){ idbLoadAll(function(){ if(S.view.v === "part") render(); }); });
+}
+boot();
+
+</script>
+</body>
+</html>
